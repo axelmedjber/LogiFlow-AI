@@ -1,1 +1,1 @@
-# logiflow-odoo19
+# LogiFlow-AI
