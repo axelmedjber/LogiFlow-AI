@@ -1,0 +1,54 @@
+<odoo>
+    <template id="portal_page" name="LogiFlow Shipment Portal" page="True">
+        <t t-call="website.layout">
+            <div class="container py-5">
+                <h1>LogiFlow Shipment Request</h1>
+                <p class="text-muted">Create shipment requests directly from the web portal.</p>
+                <t t-if="request.params.get('success')">
+                    <div class="alert alert-success" role="alert">Shipment request submitted successfully.</div>
+                </t>
+                <t t-if="request.params.get('error')">
+                    <div class="alert alert-danger" role="alert">Please provide all required fields with a valid package weight.</div>
+                </t>
+                <form action="/logiflow/submit" method="post" class="row g-3">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <div class="col-md-6">
+                        <label class="form-label">Customer Name</label>
+                        <input class="form-control" type="text" name="partner_name" required="required"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Customer Email</label>
+                        <input class="form-control" type="email" name="partner_email" required="required"/>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Pickup Address</label>
+                        <textarea class="form-control" name="pickup_address" required="required"/>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Delivery Address</label>
+                        <textarea class="form-control" name="delivery_address" required="required"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Package Weight (kg)</label>
+                        <input class="form-control" type="number" step="0.01" min="0.01" name="package_weight" required="required"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Priority</label>
+                        <select class="form-select" name="priority">
+                            <option value="low">Low</option>
+                            <option value="normal" selected="selected">Normal</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Additional Notes</label>
+                        <textarea class="form-control" name="note"/>
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-primary" type="submit">Submit Request</button>
+                    </div>
+                </form>
+            </div>
+        </t>
+    </template>
+</odoo>

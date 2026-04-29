@@ -1,0 +1,4 @@
+<odoo>
+    <menuitem id="menu_logiflow_root" name="LogiFlow" sequence="25"/>
+    <menuitem id="menu_logiflow_shipments" name="Shipment Requests" parent="menu_logiflow_root" action="action_logiflow_shipment"/>
+</odoo>

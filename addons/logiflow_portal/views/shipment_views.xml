@@ -1,0 +1,62 @@
+<odoo>
+    <record id="seq_logiflow_shipment" model="ir.sequence">
+        <field name="name">LogiFlow Shipment</field>
+        <field name="code">logiflow.shipment.request</field>
+        <field name="prefix">LFSR-</field>
+        <field name="padding">5</field>
+    </record>
+
+    <record id="view_logiflow_shipment_tree" model="ir.ui.view">
+        <field name="name">logiflow.shipment.request.tree</field>
+        <field name="model">logiflow.shipment.request</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="partner_name"/>
+                <field name="partner_email"/>
+                <field name="priority"/>
+                <field name="status"/>
+                <field name="requested_on"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_logiflow_shipment_form" model="ir.ui.view">
+        <field name="name">logiflow.shipment.request.form</field>
+        <field name="model">logiflow.shipment.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_mark_received" type="object" string="Mark Received" invisible="status in ['received', 'in_transit', 'delivered', 'cancelled']"/>
+                    <button name="action_mark_in_transit" type="object" string="Start Transit" invisible="status in ['in_transit', 'delivered', 'cancelled']"/>
+                    <button name="action_mark_delivered" type="object" string="Mark Delivered" class="btn-primary" invisible="status in ['delivered', 'cancelled']"/>
+                    <button name="action_cancel" type="object" string="Cancel" class="btn-secondary" invisible="status in ['delivered', 'cancelled']"/>
+                    <field name="status" widget="statusbar" statusbar_visible="draft,received,in_transit,delivered,cancelled"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name" readonly="1"/>
+                        <field name="partner_id"/>
+                        <field name="partner_name"/>
+                        <field name="partner_email"/>
+                        <field name="priority"/>
+                        <field name="package_weight"/>
+                        <field name="requested_on"/>
+                    </group>
+                    <group>
+                        <field name="pickup_address"/>
+                        <field name="delivery_address"/>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_logiflow_shipment" model="ir.actions.act_window">
+        <field name="name">Shipment Requests</field>
+        <field name="res_model">logiflow.shipment.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
