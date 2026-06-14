@@ -23,6 +23,10 @@ The app opens in your browser and loads the sample dataset
 (`data/stock_movements.csv`, 8 grocery products over 60 days). You can also
 upload your own CSV from the sidebar.
 
+> **Deploy a public demo (free):** push this repo to GitHub, go to
+> [share.streamlit.io](https://share.streamlit.io), click *New app*, pick the
+> repo and set the main file to `app.py`. You get a public URL to share.
+
 ## Input format
 
 ```csv
