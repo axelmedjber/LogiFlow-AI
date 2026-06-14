@@ -24,8 +24,10 @@ from src.kpi import (
     stockout_alerts,
     summary_kpis,
 )
+from ml.features import product_features
 
 DATA_FILE = Path(__file__).resolve().parent / "data" / "stock_movements.csv"
+MODEL_FILE = Path(__file__).resolve().parent / "models" / "stockout_model.pkl"
 
 st.set_page_config(page_title="LogiFlow-AI", page_icon="📦", layout="wide")
 st.title("📦 LogiFlow-AI — Warehouse KPI Dashboard")
@@ -98,3 +100,40 @@ if alerts.empty:
 else:
     st.warning(f"{len(alerts)} product(s) need restocking:")
     st.dataframe(alerts, width="stretch", hide_index=True)
+
+st.divider()
+
+# --- Machine-learning stockout risk -------------------------------------
+st.subheader("🤖 Stockout risk (machine learning)")
+st.caption(
+    "A gradient-boosting model (scikit-learn) estimates the probability that "
+    "each product runs out before its next delivery, from its stock, demand "
+    "level, demand variability and lead time."
+)
+
+lead_time = st.slider("Assumed lead time (days)", 2, 15, 5)
+
+if not MODEL_FILE.exists():
+    st.info("Trained model not found. Run `python -m ml.train` to create it.")
+else:
+    import joblib
+
+    model = joblib.load(MODEL_FILE)
+    feats = product_features(df, lead_time_days=lead_time)
+    risk = model.predict_proba(feats)[:, 1]
+
+    out = feats.copy()
+    out["stockout_risk"] = (risk * 100).round(0)
+    out = out.reset_index().sort_values("stockout_risk", ascending=False)
+    out["stockout_risk"] = out["stockout_risk"].astype(int).astype(str) + " %"
+
+    show = out[
+        ["product", "current_stock", "avg_daily_demand", "days_of_cover", "stockout_risk"]
+    ].round(1)
+    st.dataframe(show, width="stretch", hide_index=True)
+
+    high = int((risk >= 0.5).sum())
+    if high:
+        st.error(f"⚠️ {high} product(s) are at high risk of stockout (≥ 50%).")
+    else:
+        st.success("No product is at high risk of stockout.")
