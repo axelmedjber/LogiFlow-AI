@@ -35,6 +35,14 @@ uploaded = st.sidebar.file_uploader(
     "Upload a movements CSV (date, product, movement_type, quantity)",
     type="csv",
 )
+with open(DATA_FILE, "rb") as _f:
+    st.sidebar.download_button(
+        "⬇️ Download template / sample CSV",
+        _f.read(),
+        file_name="movements_template.csv",
+        mime="text/csv",
+        help="Columns: date, product, movement_type ('in'/'out'), quantity.",
+    )
 source = uploaded if uploaded is not None else DATA_FILE
 df = load_movements(source)
 
