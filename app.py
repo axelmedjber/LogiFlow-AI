@@ -46,7 +46,16 @@ with open(DATA_FILE, "rb") as _f:
         help="Columns: date, product, movement_type ('in'/'out'), quantity.",
     )
 source = uploaded if uploaded is not None else DATA_FILE
-df = load_movements(source)
+try:
+    df = load_movements(source)
+except (ValueError, KeyError) as exc:
+    st.error(
+        f"Could not read this CSV: {exc}\n\n"
+        "The file needs these columns: **date, product, movement_type "
+        "('in'/'out'), quantity**. Use the **Download template** button in the "
+        "sidebar to see the exact format."
+    )
+    st.stop()
 
 period = f"{df['date'].min():%Y-%m-%d} → {df['date'].max():%Y-%m-%d}"
 st.caption(f"Period: {period}")
