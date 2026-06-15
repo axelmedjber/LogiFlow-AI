@@ -25,6 +25,7 @@ from src.kpi import (
     summary_kpis,
 )
 from ml.features import product_features
+from src.ingest import REQUIRED, apply_mapping, coerce, guess_column
 
 DATA_FILE = Path(__file__).resolve().parent / "data" / "stock_movements.csv"
 MODEL_FILE = Path(__file__).resolve().parent / "models" / "stockout_model.pkl"
@@ -45,17 +46,54 @@ with open(DATA_FILE, "rb") as _f:
         mime="text/csv",
         help="Columns: date, product, movement_type ('in'/'out'), quantity.",
     )
-source = uploaded if uploaded is not None else DATA_FILE
-try:
-    df = load_movements(source)
-except (ValueError, KeyError) as exc:
-    st.error(
-        f"Could not read this CSV: {exc}\n\n"
-        "The file needs these columns: **date, product, movement_type "
-        "('in'/'out'), quantity**. Use the **Download template** button in the "
-        "sidebar to see the exact format."
-    )
-    st.stop()
+if uploaded is None:
+    df = load_movements(DATA_FILE)
+else:
+    try:
+        raw = pd.read_csv(uploaded)
+    except Exception as exc:
+        st.error(f"Could not read this file as CSV: {exc}")
+        st.stop()
+
+    if set(REQUIRED).issubset(raw.columns):
+        df = coerce(raw)
+    else:
+        # The columns don't match -> let the user map them.
+        st.warning(
+            "Your CSV columns don't match the expected format. "
+            "Map them below to use your own data."
+        )
+        cols = list(raw.columns)
+
+        def _idx(field):
+            g = guess_column(cols, field)
+            return cols.index(g) if g in cols else 0
+
+        m1, m2 = st.columns(2)
+        date_col = m1.selectbox("Date column", cols, index=_idx("date"))
+        product_col = m2.selectbox("Product column", cols, index=_idx("product"))
+        qty_col = m1.selectbox("Quantity column", cols, index=_idx("quantity"))
+        type_col = m2.selectbox("Movement-type column", cols, index=_idx("movement_type"))
+
+        type_values = sorted(raw[type_col].astype(str).unique())
+        default_in = [
+            v for v in type_values
+            if any(k in v.lower() for k in ["in", "rec", "entr", "+", "achat"])
+        ]
+        in_values = st.multiselect(
+            "Which value(s) mean a RECEPTION (stock in)?",
+            type_values,
+            default=default_in,
+        )
+        if not in_values:
+            st.info("Select which value(s) mean a reception to continue.")
+            st.stop()
+
+        df = apply_mapping(raw, date_col, product_col, qty_col, type_col, in_values)
+
+    if df.empty:
+        st.error("No valid rows after parsing — check your column mapping.")
+        st.stop()
 
 period = f"{df['date'].min():%Y-%m-%d} → {df['date'].max():%Y-%m-%d}"
 st.caption(f"Period: {period}")
